@@ -4,6 +4,7 @@ import pandas as pd
 import scipy.io
 import pickle
 import adniEnsemble as adens # module with customized code
+import pdb
 
 # load ADNI dataset and do pre-processing
 adnifulldf = pd.read_csv("../Dataset/ADNI/adnitable.csv")
@@ -13,7 +14,7 @@ adnifulldf.DX = adnifulldf.DX.apply(lambda x: 'CN' if x==1 else ('MCI' if x==2 e
 ## initilizations
 # different classifiers and parameters
 clf_list = ['logistic_regression','svm','random_forest']
-svc_param_grid = {'C':np.logspace(-2,2,5), 'kernel':['linear','poly'], 'degree':[2], 'gamma':[0.1, 1, 10]}
+svc_param_grid = {'C':np.logspace(-2,2,5), 'kernel':['linear','poly'], 'degree':[2], 'gamma':[0.05, 0.1, 1, 2]}
 rf_param_grid = {'n_estimators':np.arange(10,21,dtype=int), 'max_depth':np.arange(3,7,dtype=int)}
 clf_to_param_dict = {'logistic_regression':20, 'svm':svc_param_grid, 'random_forest':rf_param_grid}
 # general params for all classifiers
@@ -38,6 +39,10 @@ for modality in modality_list:
                                 & (adnifulldf[modality+'_01'] != -1), clinical_vars+modality_vars].copy()
     modalitydf['DX_bin'] = np.where(modalitydf["DX"]=="CN", 0, 1) # CN:0 , AD: 1; required for classification
 
+    # standardize the columns except Gender and APOE
+    stdize_vars = [item for sublist in [['Age','Educ'], modality_vars] for item in sublist]
+    modalitydf[stdize_vars] = (modalitydf[stdize_vars] - modalitydf[stdize_vars].mean())/(modalitydf[stdize_vars].std())
+    
     # whether or not to include factors like Gender, age and education in classifier
     for include_factors in [0,1]:
         if include_factors == 0: # do not include 'factors' in the features
@@ -46,7 +51,7 @@ for modality in modality_list:
             features = [item for sublist in [factors, modality_vars] for item in sublist]
         
         print(features)
-        
+
         # run through all classification models
         for clf_name in clf_list:
             print("Classifier is: " + clf_name)
@@ -60,8 +65,8 @@ for modality in modality_list:
 
             # file name to store results in
             if include_factors == 0: # do not include 'factors' in the features
-                save_fname = save_dir_path + clf_name +'_'+ modality+'_cv.pckl'
+                save_fname = save_dir_path + modality + '_' + clf_name +'_cv.pckl'
             else: # include "factors" on the features
-                save_fname = save_dir_path + clf_name +'_'+ modality+'_factors_cv.pckl'
+                save_fname = save_dir_path + modality + '_factors_' + clf_name + '_cv.pckl'
             
             pickle.dump(grid_out_list, open(save_fname, 'wb'))
