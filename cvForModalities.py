@@ -13,7 +13,7 @@ adnifulldf.DX = adnifulldf.DX.apply(lambda x: 'CN' if x==1 else ('MCI' if x==2 e
 ## initilizations
 # different classifiers and parameters
 clf_list = ['logistic_regression','svm','random_forest']
-svc_param_grid = {'C':np.logspace(-2,2,5), 'kernel':['linear'], 'degree':[2], 'gamma':[0.1, 1, 10]}
+svc_param_grid = {'C':np.logspace(-2,2,5), 'kernel':['linear','poly'], 'degree':[2], 'gamma':[0.1, 1, 10]}
 rf_param_grid = {'n_estimators':np.arange(10,21,dtype=int), 'max_depth':np.arange(3,7,dtype=int)}
 clf_to_param_dict = {'logistic_regression':20, 'svm':svc_param_grid, 'random_forest':rf_param_grid}
 # general params for all classifiers
@@ -44,6 +44,8 @@ for modality in modality_list:
             features = modality_vars
         else: # include "factors" on the features
             features = [item for sublist in [factors, modality_vars] for item in sublist]
+        
+        print(features)
         
         # run through all classification models
         for clf_name in clf_list:
