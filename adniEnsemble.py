@@ -12,7 +12,8 @@ from sklearn.model_selection import GridSearchCV
 # learning metrics modules
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
-
+# temporary library
+import pdb
 
 
 def SensiSpeci(true_labels, predicted_labels):
@@ -69,10 +70,16 @@ def gridSearchWrapper(classifier_name, paramdict, num_cv, train_X, train_Y, test
 
 def ttSplitWithGridSearch(classifier_name, paramdict, num_cv, datadf, feature_name, label_name, train_fraction, random_seed):
     # prepare training and test data with appropriate features and randomization
-    train_X, test_X, train_Y, test_Y = train_test_split(
+    train_X_ns, test_X_ns, train_Y, test_Y = train_test_split(
         datadf[feature_name], datadf[label_name], train_size=train_fraction, test_size=1-train_fraction,
         random_state=random_seed, shuffle=True)
     
+    # standardize features based on mean and standard deviation of each feature in training data
+    mean_list_train = np.mean(train_X_ns, axis=0)
+    std_list_train = np.std(train_X_ns, axis=0)
+    train_X = (train_X_ns-mean_list_train)/std_list_train
+    test_X = (test_X_ns-mean_list_train)/std_list_train
+
     # preform grid search to choose best model
     grid_search_out = gridSearchWrapper(classifier_name, paramdict, num_cv, 
                               train_X, train_Y, test_X, test_Y)
