@@ -27,7 +27,7 @@ def gridSearchWrapper(classifier_name, paramdict, num_cv, train_X, train_Y, test
 
     # select and train the model
     if classifier_name.lower() == 'logistic_regression':
-        mlmodel = LogisticRegressionCV(Cs=paramdict, cv=num_cv, max_iter=500)
+        mlmodel = LogisticRegressionCV(Cs=paramdict, cv=num_cv, max_iter=800)
         mlmodel.fit(train_X, train_Y)
     
     elif classifier_name.lower() == 'svm':
