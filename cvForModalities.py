@@ -22,7 +22,7 @@ train_frac = 0.8
 gs_num_cv = 4
 outer_num_cv = 10
 # data related initizations
-modality_list = ['amyloid','csf','fdg','pet'] # modify modalitydf definition line appropriately
+modality_list = ['mri'] #['amyloid','csf','fdg','pet'] # modify modalitydf definition line appropriately
 factors = ['Gender','Educ','Age','APOE']
 clinical_vars = ['Gender','Educ','Age','APOE','MMSE','DX']
 dx_stages = ['CN', 'AD']
@@ -36,7 +36,7 @@ for modality in modality_list:
     modality_vars = [fieldname for fieldname in adnifulldf.columns if modality in fieldname] 
     # create separate dataframe for modality of interest; keep only CN and AD and remove non-APOE subjects
     modalitydf = adnifulldf.loc[(adnifulldf["DX"].isin(dx_stages)) & (adnifulldf["APOE"] != -1) 
-                                & (adnifulldf[modality+'_01'] != -1), clinical_vars+modality_vars].copy()
+                                & (adnifulldf[modality+'_001'] != -1), clinical_vars+modality_vars].copy()
     modalitydf['DX_bin'] = np.where(modalitydf["DX"]=="CN", 0, 1) # CN:0 , AD: 1; required for classification
 
     # # standardize the columns except Gender and APOE # Removed on 12/1. Normalization being done based on training data in ttSplit.. function
