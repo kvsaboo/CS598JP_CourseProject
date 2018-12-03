@@ -119,3 +119,41 @@ def trainDeepLearningModelCV(model, data_X, data_Y, val_frac, train_epochs):
         train_perf[cvn,:] = temp_model.history.history['acc']
     
     return train_perf, val_perf, epoch_array
+
+
+# train each modality - use the method which had best on average performance for each modality as evaluated in previous experiment
+def modalityModelTrainWrapper(classifier_name, modality_name, train_df, num_cv):
+    # auxiliary information required in DF
+    aux_info = ['Gender','Age','Educ','APOE','DX_bin']
+    factors = ['Gender','Age','Educ','APOE']
+    
+    # grid search parameters
+    if classifier_name == 'random_forest':
+        param_grid = {'n_estimators':np.arange(10,21,dtype=int), 'max_depth':np.arange(3,7,dtype=int)}
+    elif classifier_name == 'logistic_regression':
+        param_grid = 20
+    else:
+        print('Classifier not found')
+        return 0
+    
+    # prepare data
+    modality_vars = [fieldname for fieldname in train_df.columns if modality_name in fieldname]
+    modality_columns = [item for sublist in [aux_info, modality_vars] for item in sublist]
+    modality_features = [item for sublist in [factors, modality_vars] for item in sublist]
+    
+    train_modalitydf = train_df.loc[train_df[modality_name+'_01'] !=-1, modality_columns]
+    
+    # standardize training data
+    train_modality_mean = train_modalitydf[modality_features].mean()
+    train_modality_std = train_modalitydf[modality_features].std()
+    train_X_zs = (train_modalitydf[modality_features]-train_modality_mean)/train_modality_std
+    
+    dummy_test_X = train_X_zs.iloc[0:2]
+    dummy_test_Y = train_modalitydf.iloc[0:2].DX_bin
+    
+    # perform parameter sweep for classifier and train model
+    gridout = adens.gridSearchWrapper(classifier_name, param_grid, num_cv, train_X_zs, 
+                                          train_modalitydf['DX_bin'], dummy_test_X, dummy_test_Y)
+
+    return {'model':gridout['model'], 'features':modality_features,
+            'train_mod_mean':train_modality_mean, 'train_mod_std':train_modality_std}
