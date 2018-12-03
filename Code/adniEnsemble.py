@@ -87,3 +87,35 @@ def ttSplitWithGridSearch(classifier_name, paramdict, num_cv, datadf, feature_na
     # return best model and its performance
     return grid_search_out
 
+# Deep Learning Model
+def trainDeepLearningModelCV(model, data_X, data_Y, val_frac, train_epochs):
+    num_cv = int(np.round(1/val_frac))
+    val_perf = np.zeros((num_cv, train_epochs))
+    train_perf = np.zeros((num_cv, train_epochs))
+    
+    for cvn in range(0, num_cv):
+        print("Training CV number: %d" % (cvn))
+        # split training and validation data
+        train_X_ns, val_X_ns, train_Y, val_Y = train_test_split(data_X, data_Y, 
+                                                          train_size=1-val_frac, test_size=val_frac, shuffle=True)
+        # standardize validation and training data using training data
+        mean_list_train = np.mean(train_X_ns, axis=0)
+        std_list_train = np.std(train_X_ns, axis=0)
+        train_X = (train_X_ns - mean_list_train)/std_list_train
+        val_X = (val_X_ns - mean_list_train)/std_list_train
+
+        # create model instance and compile it
+        temp_model = keras.Sequential.from_config(model.get_config())
+        temp_model.compile(optimizer=tf.train.AdamOptimizer(), 
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+        # train model
+        temp_model.fit(train_X, train_Y, 
+                       epochs=train_epochs, 
+                       validation_data=(val_X, val_Y),
+                       verbose=0)
+        epoch_array = temp_model.history.epoch
+        val_perf[cvn,:] = temp_model.history.history['val_acc']
+        train_perf[cvn,:] = temp_model.history.history['acc']
+    
+    return train_perf, val_perf, epoch_array
