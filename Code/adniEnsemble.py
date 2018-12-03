@@ -148,12 +148,10 @@ def modalityModelTrainWrapper(classifier_name, modality_name, train_df, num_cv):
     train_modality_std = train_modalitydf[modality_features].std()
     train_X_zs = (train_modalitydf[modality_features]-train_modality_mean)/train_modality_std
     
-    dummy_test_X = train_X_zs.iloc[0:2]
-    dummy_test_Y = train_modalitydf.iloc[0:2].DX_bin
-    
     # perform parameter sweep for classifier and train model
+    # NOTE: I'm passing training data as testing in the function since this function is used just to train the model
     gridout = adens.gridSearchWrapper(classifier_name, param_grid, num_cv, train_X_zs, 
-                                          train_modalitydf['DX_bin'], dummy_test_X, dummy_test_Y)
+                                          train_modalitydf['DX_bin'], train_X_zs, train_modalitydf['DX_bin'])
 
     return {'model':gridout['model'], 'features':modality_features,
             'train_mod_mean':train_modality_mean, 'train_mod_std':train_modality_std}
