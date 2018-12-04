@@ -157,3 +157,25 @@ def modalityModelTrainWrapper(classifier_name, modality_name, train_df, num_cv):
 
     return {'model':gridout['model'], 'features':modality_features,
             'train_mod_mean':train_modality_mean, 'train_mod_std':train_modality_std}
+
+
+def ensembleData(modeldict, datadf):
+    ens_dict = dict()
+
+    for modname in modeldict.keys():
+        modout = modeldict[modname]
+
+        modality_proba = modout['model'].predict_proba(
+        (datadf[modout['features']] - modout['train_mod_mean'])/modout['train_mod_std'])
+        
+        if modname == 'mri':
+            modality_proba[np.where(datadf[modname+'_001']==-1)] = np.nan
+        else:
+            modality_proba = modality_proba[:,1]
+            modality_proba[np.where(datadf[modname+'_01']==-1)] = np.nan
+
+        ens_dict[modname] = modality_proba.reshape(-1,)
+    
+    ensdatadf = pd.DataFrame(ens_dict)
+    
+    return ensdatadf
