@@ -9,6 +9,8 @@ from sklearn.ensemble import RandomForestClassifier
 # learning support modules
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from tensorflow import keras
+import tensorflow as tf
 # learning metrics modules
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
@@ -150,7 +152,7 @@ def modalityModelTrainWrapper(classifier_name, modality_name, train_df, num_cv):
     
     # perform parameter sweep for classifier and train model
     # NOTE: I'm passing training data as testing in the function since this function is used just to train the model
-    gridout = adens.gridSearchWrapper(classifier_name, param_grid, num_cv, train_X_zs, 
+    gridout = gridSearchWrapper(classifier_name, param_grid, num_cv, train_X_zs, 
                                           train_modalitydf['DX_bin'], train_X_zs, train_modalitydf['DX_bin'])
 
     return {'model':gridout['model'], 'features':modality_features,
