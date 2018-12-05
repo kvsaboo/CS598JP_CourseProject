@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import scipy.io
+from collections import Counter
 # learning model modules
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.svm import SVC
@@ -179,3 +180,14 @@ def ensembleData(modeldict, datadf):
     ensdatadf = pd.DataFrame(ens_dict)
     
     return ensdatadf
+
+
+def majorityRule(ensdatadf, prob_threshold=0.5):
+    majority_prediction = np.zeros(ensdatadf.shape[0])
+    rcount = 0
+    for index,row in ensdatadf.iterrows():
+        row = row[~np.isnan(row)]
+        rowquant = np.where(row < prob_threshold, 0, 1)
+        majority_prediction[rcount], ignorevar = Counter(rowquant).most_common()[0]
+        rcount = rcount+1
+    return majority_prediction
